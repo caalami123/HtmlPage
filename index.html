@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>safar travel agency</title>
-<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -523,7 +522,7 @@ tr:hover {
   background: var(--primary);
 }
 
-/* Email Config Card */
+/* Config Card */
 .config-card {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -563,6 +562,23 @@ tr:hover {
 .status-inactive {
   background: rgba(249, 65, 68, 0.1);
   color: var(--danger);
+}
+
+/* Progress Bar */
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 5px;
+  overflow: hidden;
+  margin: 15px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--success));
+  border-radius: 5px;
+  transition: width 0.3s ease;
 }
 
 /* Responsive */
@@ -621,7 +637,7 @@ tr:hover {
 <!-- Login Page -->
 <div class="login-container" id="loginPage">
   <div class="login-box">
-    <h2>Safar Travel </h2>
+    <h2>Safar Travel Admin</h2>
     <div class="login-input-group">
       <label for="adminUser"><i class="fas fa-envelope"></i> Email Address</label>
       <input type="text" id="adminUser" placeholder="admin@example.com">
@@ -634,7 +650,7 @@ tr:hover {
       <i class="fas fa-sign-in-alt"></i> Sign In
     </button>
     <div style="text-align: center; margin-top: 20px; color: var(--gray); font-size: 14px;">
-      <i class="fas fa-info-circle"></i> Use your access 
+      <i class="fas fa-info-circle"></i> Use your Firebase Auth credentials
     </div>
   </div>
 </div>
@@ -661,15 +677,15 @@ tr:hover {
       </a>
       <a href="#" onclick="showTab('emailTab')">
         <i class="fas fa-envelope"></i>
-        <span>Email Marketing</span>
+        <span>Email Campaigns</span>
       </a>
       <a href="#" onclick="showTab('analysisTab')">
         <i class="fas fa-chart-line"></i>
         <span>Analytics</span>
       </a>
-      <a href="#" onclick="showTab('settingsTab')">
-        <i class="fas fa-cog"></i>
-        <span>Settings</span>
+      <a href="#" onclick="showTab('functionsTab')">
+        <i class="fas fa-code"></i>
+        <span>Cloud Functions</span>
       </a>
     </div>
     
@@ -718,10 +734,10 @@ tr:hover {
         
         <div class="card">
           <div class="card-icon">
-            <i class="fab fa-whatsapp"></i>
+            <i class="fas fa-check-circle"></i>
           </div>
-          <h3>WhatsApp Sent</h3>
-          <span id="totalWA">0</span>
+          <h3>Success Rate</h3>
+          <span id="successRate">0%</span>
         </div>
       </div>
       
@@ -732,10 +748,10 @@ tr:hover {
             <i class="fas fa-paper-plane"></i> Send Email Campaign
           </button>
           <button class="btn btn-success" onclick="showTab('customersTab')">
-            <i class="fas fa-user-plus"></i> Add New Customer
+            <i class="fas fa-user-plus"></i> Add Customer
           </button>
-          <button class="btn" style="background: rgba(114, 9, 183, 0.1); color: var(--secondary);" onclick="generateReport()">
-            <i class="fas fa-file-export"></i> Generate Report
+          <button class="btn" style="background: rgba(114, 9, 183, 0.1); color: var(--secondary);" onclick="testCloudFunction()">
+            <i class="fas fa-vial"></i> Test Cloud Function
           </button>
         </div>
       </div>
@@ -784,30 +800,24 @@ tr:hover {
       </div>
     </div>
     
-    <!-- Email Marketing Tab -->
+    <!-- Email Campaigns Tab -->
     <div id="emailTab" class="tab">
-      <div class="content-box">
-        <h3><i class="fas fa-envelope-open-text"></i> Email Configuration Status</h3>
-        <div class="cards" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
-          <div class="config-card">
-            <h4><i class="fas fa-fire"></i> Firebase SMTP Status</h4>
-            <div class="status-indicator status-active" id="firebaseStatus">
-              <i class="fas fa-check-circle"></i> Connected
-            </div>
-            <div style="margin-top: 15px; font-size: 14px; color: var(--gray-light);">
-              <div><strong>Sender:</strong> safartravel1122@gmail.com</div>
-              <div><strong>SMTP Host:</strong> smtp-relay.brewo.com</div>
-              <div><strong>Port:</strong> 587 (STARTTLS)</div>
-            </div>
+      <div class="config-card">
+        <h4><i class="fas fa-cogs"></i> Email Configuration</h4>
+        <div class="form-group">
+          <label for="emailMode">Email Sending Mode</label>
+          <select id="emailMode" class="form-control" onchange="toggleEmailMode()">
+            <option value="simulation">Simulation Mode (Safe)</option>
+            <option value="cloud-function">Cloud Function Mode (Real)</option>
+          </select>
+        </div>
+        
+        <div id="cloudFunctionStatus" style="display: none;">
+          <div class="status-indicator status-inactive" id="cfStatusIndicator">
+            <i class="fas fa-times-circle"></i> Cloud Function Not Configured
           </div>
-          
-          <div class="config-card">
-            <h4><i class="fas fa-envelope"></i> Email Template</h4>
-            <div style="margin-top: 15px; font-size: 14px; color: var(--gray-light);">
-              <div><strong>From:</strong> Safar Travel Agency</div>
-              <div><strong>Reply-to:</strong> noreply@safar-tadfs.firebaseapp.com</div>
-              <div><strong>Subject:</strong> Verify your email for %APP_NAME%</div>
-            </div>
+          <div style="margin-top: 10px; font-size: 14px; color: var(--gray);">
+            Follow the steps in the Cloud Functions tab to set up real email sending
           </div>
         </div>
       </div>
@@ -818,23 +828,38 @@ tr:hover {
           <label for="campaignSubject">Email Subject</label>
           <input type="text" id="campaignSubject" class="form-control" placeholder="Special Travel Offers for You!">
         </div>
+        
         <div class="form-group">
-          <label for="campaignMessage">Email Message</label>
-          <textarea id="campaignMessage" class="form-control" rows="6" placeholder="Write your email content here..."></textarea>
+          <label for="campaignMessage">Email Content (HTML)</label>
+          <textarea id="campaignMessage" class="form-control" rows="8" placeholder="Write your email content here..."></textarea>
         </div>
+        
         <div class="form-group">
-          <label for="emailTemplate">Template Type</label>
-          <select id="emailTemplate" class="form-control" onchange="changeTemplate()">
+          <label for="emailTemplate">Template</label>
+          <select id="emailTemplate" class="form-control" onchange="loadTemplate()">
             <option value="custom">Custom Message</option>
+            <option value="welcome">Welcome Email</option>
             <option value="promotion">Promotional Offer</option>
             <option value="newsletter">Newsletter</option>
-            <option value="verification">Verification Email</option>
           </select>
         </div>
+        
+        <div id="sendingProgress" style="display: none;">
+             <h4><i class="fas fa-spinner fa-spin"></i> Sending Emails...</h4>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 14px; color: var(--gray);">
+            <span>Progress: <span id="progressText">0%</span></span>
+            <span>Sent: <span id="sentCount">0</span>/<span id="totalCount">0</span></span>
+          </div>
+          <div id="sendErrors" style="margin-top: 10px; display: none; color: var(--danger);"></div>
+        </div>
+        
         <div style="display: flex; gap: 15px; margin-top: 20px;">
           <button class="btn btn-primary" onclick="sendEmailCampaign()">
             <i class="fas fa-paper-plane"></i> Send to All Customers
-            </button>
+          </button>
           <button class="btn btn-success" onclick="sendTestEmail()">
             <i class="fas fa-vial"></i> Send Test Email
           </button>
@@ -842,72 +867,360 @@ tr:hover {
       </div>
       
       <div class="content-box">
-        <h3><i class="fas fa-history"></i> Recent Email Campaigns</h3>
-        <div id="emailHistory">
+        <h3><i class="fas fa-history"></i> Campaign History</h3>
+        <div id="campaignHistory">
           <div style="text-align: center; padding: 30px; color: var(--gray);">
             <i class="fas fa-envelope-open-text fa-2x" style="margin-bottom: 15px;"></i>
-            <p>No email campaigns sent yet. Send your first campaign to see history here.</p>
+            <p>No campaigns sent yet. Send your first campaign to see history here.</p>
           </div>
         </div>
       </div>
     </div>
     
-    <!-- Analysis Tab -->
+    <!-- Analytics Tab -->
     <div id="analysisTab" class="tab">
       <div class="content-box">
-        <h3><i class="fas fa-chart-bar"></i> Performance Analytics</h3>
+        <h3><i class="fas fa-chart-bar"></i> Email Performance Analytics</h3>
         <div class="chart-container">
           <canvas id="analysisChart"></canvas>
         </div>
       </div>
     </div>
     
-    <!-- Settings Tab -->
-    <div id="settingsTab" class="tab">
+    <!-- Cloud Functions Tab -->
+    <div id="functionsTab" class="tab">
       <div class="content-box">
-        <h3><i class="fas fa-cogs"></i> System Configuration</h3>
+        <h3><i class="fas fa-cloud"></i> Firebase Cloud Functions Setup</h3>
+        <p>Follow these steps to enable real email functionality:</p>
         
         <div class="config-card">
-          <h4><i class="fas fa-fire"></i> Firebase Authentication Settings</h4>
-          <div class="form-group">
-            <label>Project ID</label>
-            <input type="text" class="form-control" value="safar-1a4f5" readonly>
-          </div>
-          <div class="form-group">
-            <label>Sender Email</label>
-            <input type="text" class="form-control" value="safartravel1122@gmail.com" readonly>
-          </div>
-          <div class="form-group">
-            <label>SMTP Server</label>
-            <input type="text" class="form-control" value="smtp-relay.brewo.com:587" readonly>
+          <h4><i class="fas fa-terminal"></i> Step 1: Install Firebase CLI</h4>
+          <pre style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: var(--radius-sm); overflow-x: auto; margin-top: 10px;">
+npm install -g firebase-tools
+firebase login</pre>
+        </div>
+        
+        <div class="config-card">
+          <h4><i class="fas fa-folder"></i> Step 2: Initialize Firebase Functions</h4>
+          <pre style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: var(--radius-sm); overflow-x: auto; margin-top: 10px;">
+# In your project directory
+firebase init functions
+
+# Select JavaScript when prompted
+# Select your project: safar-1a4f5
+# Install dependencies? Yes</pre>
+        </div>
+        
+        <div class="config-card">
+          <h4><i class="fas fa-code"></i> Step 3: Create Email Functions</h4>
+          <p>Replace <code>functions/index.js</code> with this code:</p>
+          <pre style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: var(--radius-sm); overflow-x: auto; margin-top: 10px; font-size: 12px; line-height: 1.4;">
+const functions = require('firebase-functions');
+const admin = require('firebase-admin');
+const nodemailer = require('nodemailer');
+
+admin.initializeApp();
+
+// Create reusable transporter object using SMTP transport
+const createTransporter = () => {
+  return nodemailer.createTransport({
+    host: functions.config().smtp.host,
+    port: functions.config().smtp.port,
+    secure: false, // true for 465, false for other ports
+    auth: {
+      user: functions.config().smtp.user,
+      pass: functions.config().smtp.pass
+    }
+  });
+};
+
+// Send single email function
+exports.sendEmail = functions.https.onCall(async (data, context) => {
+  // Check authentication
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'You must be logged in to send emails.'
+    );
+  }
+
+  const { to, subject, html, text } = data;
+
+  if (!to || !subject || (!html && !text)) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Missing required email fields'
+    );
+  }
+
+  try {
+    const transporter = createTransporter();
+    
+    const mailOptions = {
+      from: `"Safar Travel" <${functions.config().smtp.from || 'noreply@safar-travel.com'}>`,
+      to: to,
+      subject: subject,
+      html: html || text,
+      text: text || html.replace(/<[^>]*>/g, '') // Convert HTML to text if no text provided
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    
+    // Log the email in Firestore
+    await admin.firestore().collection('email_logs').add({
+      to: to,
+      subject: subject,
+      messageId: info.messageId,
+      status: 'sent',
+      sentBy: context.auth.uid,
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+      mode: 'single'
+    });
+
+    return {
+      success: true,
+      messageId: info.messageId,
+      message: 'Email sent successfully'
+    };
+  } catch (error) {
+    console.error('Error sending email:', error);
+    
+    // Log the error in Firestore
+    await admin.firestore().collection('email_logs').add({
+      to: to,
+      subject: subject,
+      status: 'failed',
+      sentBy: context.auth.uid,
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+      error: error.message,
+      mode: 'single'
+    });
+
+    throw new functions.https.HttpsError(
+      'internal',
+      'Failed to send email: ' + error.message
+    );
+  }
+});
+
+// Send bulk emails function
+exports.sendBulkEmails = functions.https.onCall(async (data, context) => {
+  // Check authentication
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'You must be logged in to send bulk emails.'
+    );
+  }
+
+  const { subject, html, text, customerIds } = data;
+
+  if (!subject || (!html && !text) || !customerIds || !Array.isArray(customerIds)) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Missing required fields'
+    );
+  }
+
+  try {
+    const db = admin.firestore();
+    const transporter = createTransporter();
+    
+    // Get customer emails
+    const customersSnapshot = await db.collection('customers')
+      .where(admin.firestore.FieldPath.documentId(), 'in', customerIds.slice(0, 10)) // Firestore IN limit is 10
+      .get();
+
+    if (customersSnapshot.empty) {
+      throw new functions.https.HttpsError(
+        'not-found',
+        'No customers found'
+      );
+    }
+
+    const campaignId = admin.firestore().collection('campaigns').doc().id;
+    const results = {
+      total: customersSnapshot.size,
+      sent: 0,
+      failed: 0,
+      errors: []
+    };
+
+    // Send emails sequentially to avoid rate limits
+    for (const doc of customersSnapshot.docs) {
+      const customer = doc.data();
+      
+      try {
+        const mailOptions = {
+          from: `"Safar Travel" <${functions.config().smtp.from || 'noreply@safar-travel.com'}>`,
+          to: customer.email,
+          subject: subject,
+          html: html || text,
+          text: text || html.replace(/<[^>]*>/g, '')
+        };
+
+        const info = await transporter.sendMail(mailOptions);
+        
+        // Log each email
+        await db.collection('email_logs').add({
+          campaignId: campaignId,
+          to: customer.email,
+          customerId: doc.id,
+          customerName: customer.name,
+          subject: subject,
+          messageId: info.messageId,
+          status: 'sent',
+          sentBy: context.auth.uid,
+          sentAt: admin.firestore.FieldValue.serverTimestamp(),
+          mode: 'bulk'
+        });
+        
+        results.sent++;
+      } catch (error) {
+        console.error(`Failed to send to ${customer.email}:`, error);
+        
+        // Log the error
+        await db.collection('email_logs').add({
+          campaignId: campaignId,
+          to: customer.email,
+          customerId: doc.id,
+          customerName: customer.name,
+          subject: subject,
+          status: 'failed',
+          sentBy: context.auth.uid,
+          sentAt: admin.firestore.FieldValue.serverTimestamp(),
+          error: error.message,
+          mode: 'bulk'
+        });
+        
+        results.failed++;
+        results.errors.push({
+          email: customer.email,
+          error: error.message
+        });
+      }
+    }
+        // Log the campaign
+    await db.collection('campaigns').doc(campaignId).set({
+      subject: subject,
+      totalRecipients: results.total,
+      sent: results.sent,
+      failed: results.failed,
+      sentBy: context.auth.uid,
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+      status: 'completed'
+    });
+
+    return {
+      success: true,
+      campaignId: campaignId,
+      results: results
+    };
+  } catch (error) {
+    console.error('Error in bulk email sending:', error);
+    throw new functions.https.HttpsError(
+      'internal',
+      'Failed to send bulk emails: ' + error.message
+    );
+  }
+});
+
+// Test email function
+exports.testEmail = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'You must be logged in to test emails.'
+    );
+  }
+
+  const { to = context.auth.email, subject, html, text } = data;
+
+  try {
+    const transporter = createTransporter();
+    
+    const mailOptions = {
+      from: `"Safar Travel" <${functions.config().smtp.from || 'noreply@safar-travel.com'}>`,
+      to: to,
+      subject: subject || 'Test Email from Safar Travel',
+      html: html || '<h1>Test Email</h1><p>This is a test email from your Safar Travel Admin dashboard.</p>',
+      text: text || 'This is a test email from your Safar Travel Admin dashboard.'
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    
+    // Log the test email
+    await admin.firestore().collection('email_logs').add({
+      to: to,
+      subject: mailOptions.subject,
+      messageId: info.messageId,
+      status: 'sent',
+      sentBy: context.auth.uid,
+      isTest: true,
+      sentAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    return {
+      success: true,
+      messageId: info.messageId,
+      message: 'Test email sent successfully'
+    };
+  } catch (error) {
+    console.error('Error sending test email:', error);
+    throw new functions.https.HttpsError(
+      'internal',
+      'Failed to send test email: ' + error.message
+    );
+  }
+});</pre>
+        </div>
+        
+        <div class="config-card">
+          <h4><i class="fas fa-key"></i> Step 4: Set Environment Variables</h4>
+          <p>Run these commands in your terminal:</p>
+          <pre style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: var(--radius-sm); overflow-x: auto; margin-top: 10px;">
+# Set SMTP configuration (use your credentials from Firebase Auth)
+firebase functions:config:set \
+  smtp.host="smtp-relay.brewo.com" \
+  smtp.port="587" \
+  smtp.user="9ebb12001@smtp-brewo.com" \
+  smtp.pass="YOUR_SMTP_PASSWORD" \
+  smtp.from="safartravel1122@gmail.com"</pre>
+          
+          <div class="form-group" style="margin-top: 20px;">
+            <label>Your SMTP Configuration (from Firebase Auth):</label>
+            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: var(--radius-sm); margin-top: 10px;">
+              <div><strong>Host:</strong> smtp-relay.brewo.com</div>
+              <div><strong>Port:</strong> 587</div>
+              <div><strong>Username:</strong> 9ebb12001@smtp-brewo.com</div>
+              <div><strong>Password:</strong> [Use the same password as in Firebase Authentication SMTP settings]</div>
+              <div><strong>From Email:</strong> safartravel1122@gmail.com</div>
+              <div><strong>Security:</strong> STARTTLS</div>
+            </div>
           </div>
         </div>
         
         <div class="config-card">
-          <h4><i class="fas fa-envelope"></i> Email Template Configuration</h4>
-          <div class="form-group">
-            <label for="emailSenderName">Sender Name</label>
-            <input type="text" id="emailSenderName" class="form-control" value="Safar Travel Agency">
-          </div>
-          <div class="form-group">
-            <label for="emailReplyTo">Reply-to Address</label>
-            <input type="text" id="emailReplyTo" class="form-control" value="noreply@safar-tadfs.firebaseapp.com">
-          </div>
-          <button class="btn btn-primary" onclick="saveEmailSettings()">
-            <i class="fas fa-save"></i> Save Email Settings
+          <h4><i class="fas fa-rocket"></i> Step 5: Deploy Functions</h4>
+          <pre style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: var(--radius-sm); overflow-x: auto; margin-top: 10px;">
+# Install Nodemailer
+cd functions
+npm install nodemailer
+
+# Deploy functions
+firebase deploy --only functions
+
+# Check deployment status
+firebase functions:log</pre>
+        </div>
+        
+        <div class="config-card">
+          <h4><i class="fas fa-check-circle"></i> Step 6: Test Configuration</h4>
+          <p>After deployment, click the test button below to verify your setup:</p>
+          <button class="btn btn-primary" onclick="testCloudFunction()">
+            <i class="fas fa-vial"></i> Test Cloud Function Connection
           </button>
-        </div>
-        
-        <div class="config-card">
-          <h4><i class="fas fa-database"></i> Data Management</h4>
-          <div style="display: flex; gap: 15px; margin-top: 15px;">
-            <button class="btn" style="background: rgba(249, 65, 68, 0.1); color: var(--danger);" onclick="exportData()">
-              <i class="fas fa-file-export"></i> Export Data
-            </button>
-            <button class="btn" style="background: rgba(67, 97, 238, 0.1); color: var(--primary);" onclick="backupData()">
-              <i class="fas fa-save"></i> Backup Now
-            </button>
-          </div>
+          <div id="testResult" style="margin-top: 15px;"></div>
         </div>
       </div>
     </div>
@@ -925,10 +1238,10 @@ tr:hover {
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, onSnapshot, getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 
-// Firebase Config - Using YOUR actual Firebase config
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyCY2ZeJ4jJu-vPo_25ZNa1-pPeuVFxi9Ag",
   authDomain: "safar-1a4f5.firebaseapp.com",
@@ -942,22 +1255,21 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+const functions = getFunctions(app);
 const customersCol = collection(db, "customers");
 const emailLogsCol = collection(db, "email_logs");
 
-// Firebase SMTP Configuration (from your images)
-const FIREBASE_SMTP_CONFIG = {
-  sender: "safartravel1122@gmail.com",
-  host: "smtp-relay.brewo.com",
-  port: 587,
-  username: "9ebb12001@smtp-brewo.com",
-  security: "STARTTLS"
-};
+// Cloud Function references
+let sendEmailFunction = null;
+let sendBulkEmailsFunction = null;
+let testEmailFunction = null;
 
-// EmailJS initialization (fallback)
-emailjs.init("kpOeovejkjSL4ehak");
-let EMAILJS_SERVICE_ID = "service_default";
-let EMAILJS_TEMPLATE_ID = "template_default";
+// App state
+let APP_SETTINGS = {
+  emailMode: 'simulation',
+  totalEmailsSent: 0,
+  totalEmailsFailed: 0
+};
 
 // Toast notification
 function showToast(message, type = "success") {
@@ -987,6 +1299,28 @@ function showToast(message, type = "success") {
     toast.classList.remove("show");
   }, 3000);
 }
+
+// Initialize Cloud Functions
+function initializeCloudFunctions() {
+  try {
+    sendEmailFunction = httpsCallable(functions, 'sendEmail');
+    sendBulkEmailsFunction = httpsCallable(functions, 'sendBulkEmails');
+    testEmailFunction = httpsCallable(functions, 'testEmail');
+    
+    // Update UI to show Cloud Functions are available
+    const statusIndicator = document.getElementById('cfStatusIndicator');
+    if (statusIndicator) {
+      statusIndicator.className = 'status-indicator status-active';
+      statusIndicator.innerHTML = '<i class="fas fa-check-circle"></i> Cloud Functions Ready';
+    }
+    
+    return true;
+  } catch (error) {
+    console.warn('Cloud Functions not available:', error);
+    return false;
+  }
+}
+
 // Tab navigation
 function showTab(tabID) {
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
@@ -998,9 +1332,9 @@ function showTab(tabID) {
   const tabTitles = {
     'dashboardTab': 'Dashboard Overview',
     'customersTab': 'Customer Management',
-    'emailTab': 'Email Marketing',
+    'emailTab': 'Email Campaigns',
     'analysisTab': 'Analytics Dashboard',
-    'settingsTab': 'System Settings'
+    'functionsTab': 'Cloud Functions Setup'
   };
   
   document.getElementById('pageTitle').textContent = tabTitles[tabID] || 'Dashboard';
@@ -1011,6 +1345,24 @@ function showTab(tabID) {
   
   if (window.innerWidth <= 768) {
     document.getElementById('sidebar').classList.remove('open');
+  }
+}
+
+// Toggle email mode
+function toggleEmailMode() {
+  const mode = document.getElementById('emailMode').value;
+  const cloudFunctionStatus = document.getElementById('cloudFunctionStatus');
+  
+  if (mode === 'cloud-function') {
+    cloudFunctionStatus.style.display = 'block';
+    
+    // Try to initialize Cloud Functions
+    const cfAvailable = initializeCloudFunctions();
+    if (!cfAvailable) {
+      showToast('Cloud Functions not available. Please deploy them first.', 'warning');
+    }
+  } else {
+    cloudFunctionStatus.style.display = 'none';
   }
 }
 
@@ -1036,6 +1388,9 @@ function login() {
       loadCustomers();
       updateAnalysis();
       updateCurrentDate();
+      loadSettings();
+      initializeCloudFunctions(); // Try to initialize Cloud Functions
+      
       showToast(`Welcome to Safar Travel Admin, ${user.email.split('@')[0]}!`);
     })
     .catch((error) => {
@@ -1087,8 +1442,7 @@ async function addCustomer() {
     showToast("Error adding customer. Please try again.", "error");
   }
 }
-
-// Load customers
+  // Load customers
 async function loadCustomers() {
   try {
     const snapshot = await getDocs(query(customersCol, orderBy("createdAt", "desc")));
@@ -1127,9 +1481,29 @@ async function loadCustomers() {
     });
     
     document.getElementById("totalCustomers").textContent = total;
+    
+    // Update stats
+    updateEmailStats();
+    
   } catch (error) {
     console.error("Error loading customers:", error);
     showToast("Error loading customers", "error");
+  }
+}
+
+// Update email statistics
+async function updateEmailStats() {
+  try {
+    const logsSnapshot = await getDocs(query(emailLogsCol, orderBy("sentAt", "desc")));
+    const totalSent = logsSnapshot.size;
+    const successful = logsSnapshot.docs.filter(doc => doc.data().status === 'sent').length;
+    const successRate = totalSent > 0 ? Math.round((successful / totalSent) * 100) : 0;
+    
+    document.getElementById("totalEmails").textContent = totalSent;
+    document.getElementById("successRate").textContent = `${successRate}%`;
+    
+  } catch (error) {
+    console.error("Error updating email stats:", error);
   }
 }
 
@@ -1149,209 +1523,70 @@ async function deleteCustomer(id) {
     showToast("Error deleting customer", "error");
   }
 }
-// Send email campaign using Firebase SMTP
-async function sendEmailCampaign() {
-  const subject = document.getElementById("campaignSubject").value;
-  const message = document.getElementById("campaignMessage").value;
-  const templateType = document.getElementById("emailTemplate").value;
-  
-  if (!subject || !message) {
-    showToast("Please enter both subject and message", "error");
-    return;
-  }
-  
-  try {
-    const snapshot = await getDocs(customersCol);
-    
-    if (snapshot.empty) {
-      showToast("No customers to send emails to", "error");
-      return;
-    }
-    
-    // Show sending progress
-    showToast(`Starting to send emails to ${snapshot.size} customers...`, "info");
-    
-    let sentCount = 0;
-    let failedCount = 0;
-    
-    // In a real implementation, you would call a Cloud Function or backend service
-    // that uses the Firebase SMTP configuration to send emails
-    // For now, we'll simulate the process
-    
-    for (const docu of snapshot.docs) {
-      const customer = docu.data();
-      
-      try {
-        // Simulate email sending via Firebase SMTP
-        console.log(`Sending email to ${customer.email} via Firebase SMTP`);
-        console.log(`From: ${FIREBASE_SMTP_CONFIG.sender}`);
-        console.log(`Subject: ${subject}`);
-        console.log(`Message: ${message.substring(0, 50)}...`);
-        
-        // Log the email in Firestore
-        await addDoc(emailLogsCol, {
-          customerId: docu.id,
-          customerEmail: customer.email,
-          customerName: customer.name,
-          subject: subject,
-          message: message,
-          templateType: templateType,
-          sentVia: "Firebase SMTP",
-          status: "sent",
-          sentAt: new Date()
-        });
-        
-        sentCount++;
-        
-        // Update UI every 5 emails
-        if (sentCount % 5 === 0) {
-          showToast(`Sent ${sentCount} of ${snapshot.size} emails...`, "info");
-        }
-        
-        // Small delay to simulate sending
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-      } catch (error) {
-        console.error(`Failed to send to ${customer.email}:`, error);
-        failedCount++;
-        
-        // Log failed attempt
-        await addDoc(emailLogsCol, {
-          customerId: docu.id,
-          customerEmail: customer.email,
-          customerName: customer.name,
-          subject: subject,
-          message: message,
-          templateType: templateType,
-          sentVia: "Firebase SMTP",
-          status: "failed",
-          error: error.message,
-          sentAt: new Date()
-        });
-      }
-    }
-    
-    // Update counters
-    const currentEmails = parseInt(document.getElementById("totalEmails").textContent || 0);
-    document.getElementById("totalEmails").textContent = currentEmails + sentCount;
-    
-    // Add to email history
-    addToEmailHistory({
-      subject: subject,
-      sentCount: sentCount,
-      failedCount: failedCount,
-      total: snapshot.size,
-      sentAt: new Date()
-    });
-    
-    showToast(`Campaign completed! Sent: ${sentCount}, Failed: ${failedCount}`, 
-              failedCount > 0 ? "warning" : "success");
-    
-    updateAnalysis();
-    
-  } catch (error) {
-    console.error("Error sending email campaign:", error);
-    showToast("Error sending email campaign", "error");
-  }
-}
 
-// Send test email
-async function sendTestEmail() {
-  const subject = document.getElementById("campaignSubject").value || "Test Email from Safar Travel";
-  const message = document.getElementById("campaignMessage").value || "This is a test email from your Safar Travel Admin dashboard.";
-  const user = auth.currentUser;
-  
-  if (!user) {
-    showToast("You must be logged in to send test emails", "error");
-    return;
-  }
-  
-  try {
-    showToast("Sending test email...", "info");
-    
-    // In a real implementation, you would call a Cloud Function
-    // For now, we'll simulate it
-    console.log("Sending test email via Firebase SMTP:");
-    console.log(`To: ${user.email}`);
-    console.log(`From: ${FIREBASE_SMTP_CONFIG.sender}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Message: ${message}`);
-    
-    // Log the test email
-    await addDoc(emailLogsCol, {
-      customerEmail: user.email,
-      customerName: "Test User",
-      subject: subject,
-      message: message,
-      templateType: "test",
-      sentVia: "Firebase SMTP",
-      status: "sent",
-      isTest: true,
-      sentAt: new Date()
-    });
-    
-    showToast(`Test email sent to ${user.email}`, "success");
-    
-  } catch (error) {
-    console.error("Error sending test email:", error);
-    showToast("Error sending test email", "error");
-  }
-}
-
-// Add to email history
-function addToEmailHistory(campaign) {
-  const emailHistory = document.getElementById("emailHistory");
-  const time = campaign.sentAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const date = campaign.sentAt.toLocaleDateString();
-  
-  const successRate = Math.round((campaign.sentCount / campaign.total) * 100);
-  
-  const campaignElement = `
-    <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 10px; border-left: 3px solid ${successRate > 90 ? 'var(--success)' : 'var(--warning)'};">
-      <div style="display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center;">
-        <div>
-          <strong>${campaign.subject}</strong>
-          <div style="font-size: 12px; color: var(--gray); margin-top: 4px;">${date} at ${time}</div>
-        </div>
-        <div style="display: flex; gap: 10px; align-items: center;">
-          <span class="status-indicator ${successRate > 90 ? 'status-active' : 'status-inactive'}">
-            ${successRate}% success
-          </span>
-        </div>
-      </div>
-      <div style="display: flex; gap: 15px; font-size: 14px; color: var(--gray-light);">
-        <div><i class="fas fa-check-circle"></i> ${campaign.sentCount} sent</div>
-        <div><i class="fas fa-times-circle"></i> ${campaign.failedCount} failed</div>
-        <div><i class="fas fa-users"></i> ${campaign.total} total</div>
-      </div>
-    </div>
-  `;
-  
-  if (emailHistory.innerHTML.includes('No email campaigns')) {
-    emailHistory.innerHTML = campaignElement;
-  } else {
-    emailHistory.innerHTML = campaignElement + emailHistory.innerHTML;
-  }
-}
-
-// Change email template
-function changeTemplate() {
+// Load email template
+function loadTemplate() {
   const template = document.getElementById("emailTemplate").value;
   const subjectInput = document.getElementById("campaignSubject");
   const messageInput = document.getElementById("campaignMessage");
   
   const templates = {
+    'welcome': {
+      subject: 'Welcome to Safar Travel! Your Adventure Begins Here ✈️',
+      message: `<h1>Welcome to Safar Travel!</h1>
+<p>Dear [Customer Name],</p>
+<p>Thank you for choosing Safar Travel as your travel partner! We're excited to help you plan your next adventure.</p>
+<p>As a valued customer, you'll receive:</p>
+<ul>
+  <li>Exclusive travel deals and discounts</li>
+  <li>Personalized itinerary planning</li>
+  <li>24/7 customer support</li>
+  <li>Early access to new destinations</li>
+</ul>
+<p>Start exploring our packages: <a href="https://safar-travel.com">safar-travel.com</a></p>
+<p>Happy travels!</p>
+<p><strong>The Safar Travel Team</strong></p>`
+    },
     'promotion': {
-      subject: 'Exclusive Travel Deals Just for You! ✈️',
-      message: 'Dear valued customer,\n\nWe have exciting travel offers that we think you\'ll love! Check out our latest promotions:\n\n• 30% off on all international flights\n• Free hotel upgrades for bookings this month\n• Exclusive tour packages\n\nBook now at: www.safartravel.com\n\nBest regards,\nSafar Travel Team'
+      subject: '🎉 Exclusive Travel Deals - Up to 40% Off!',
+      message: `<h1>Special Travel Offers Just for You!</h1>
+<p>Dear [Customer Name],</p>
+<p>We have exciting news! Enjoy exclusive discounts on your next adventure:</p>
+<h3>🔥 Hot Deals:</h3>
+<ul>
+  <li><strong>Bali Paradise:</strong> 7 nights from $899 (Save 35%)</li>
+  <li><strong>European Explorer:</strong> 10-day tour from $1,499 (Save 40%)</li>
+  <li><strong>Maldives Luxury:</strong> All-inclusive from $1,999 (Save 30%)</li>
+</ul>
+<p>These offers are available for a limited time only!</p>
+<p><a href="https://safar-travel.com/deals" style="background-color: #4361ee; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">View All Deals</a></p>
+<p>Book by [Date] to secure your discount!</p>
+<p><strong>Safar Travel Team</strong></p>`
     },
     'newsletter': {
-      subject: 'Safar Travel Monthly Newsletter - Latest Updates',
-      message: 'Hello from Safar Travel!\n\nHere are the latest updates and travel tips from our team:\n\n1. New Destinations Added\n2. Travel Safety Guidelines\n3. Customer Stories\n4. Upcoming Events\n\nRead the full newsletter: www.safartravel.com/newsletter\n\nHappy travels!\nThe Safar Travel Team'
-    },
-    'verification': {
-      subject: 'Verify your email for Safar Travel',
-      message: 'Hello %DISPLAY_NAME%,\n\nFollow this link to verify your email address:\n\nhttps://safar-1a4f5.firebaseapp.com/__/auth/action\n\nIf you didn\'t ask to verify this address, you can ignore this email.\n\nThanks,\nYour Safar Travel team'
+      subject: '📰 Safar Travel Monthly Newsletter - Latest Updates',
+      message: `<h1>Monthly Travel Newsletter</h1>
+<p>Dear [Customer Name],</p>
+<p>Here's what's new at Safar Travel this month:</p>
+<h3>🌍 New Destinations Added</h3>
+<p>We've expanded our offerings to include:</p>
+<ul>
+  <li>Japan Cherry Blossom Tours</li>
+  <li>African Safari Adventures</li>
+  <li>Scandinavian Northern Lights Expeditions</li>
+</ul>
+<h3>✈️ Travel Tips & Guides</h3>
+<p>Check out our latest travel guides:</p>
+<ul>
+  <li>Packing smart for international travel</li>
+  <li>Best time to visit popular destinations</li>
+  <li>Travel insurance explained</li>
+</ul>
+<h3>🎯 Customer Spotlight</h3>
+<p>Read about our customer's amazing journey to Machu Picchu!</p>
+<p><a href="https://safar-travel.com/newsletter">Read Full Newsletter</a></p>
+<p>Happy travels,</p>
+<p><strong>The Safar Travel Team</strong></p>`
     }
   };
   
@@ -1362,56 +1597,418 @@ function changeTemplate() {
   }
 }
 
-// Save email settings
-function saveEmailSettings() {
-  const senderName = document.getElementById("emailSenderName").value;
-  const replyTo = document.getElementById("emailReplyTo").value;
+// Send email campaign
+async function sendEmailCampaign() {
+  const mode = document.getElementById('emailMode').value;
+  const subject = document.getElementById('campaignSubject').value;
+  const html = document.getElementById('campaignMessage').value;
   
-  // In a real implementation, you would save these to Firestore
-  localStorage.setItem('safar_email_sender', senderName);
-  localStorage.setItem('safar_email_replyto', replyTo);
+  if (!subject || !html) {
+    showToast('Please enter subject and message', 'error');
+    return;
+  }
   
-  showToast("Email settings saved successfully!");
+  try {
+    // Get all customers
+    const snapshot = await getDocs(customersCol);
+    if (snapshot.empty) {
+      showToast('No customers to send emails to', 'error');
+      return;
+    }
+    
+    const customerIds = snapshot.docs.map(doc => doc.id);
+    const totalCustomers = customerIds.length;
+    
+    if (mode === 'simulation') {
+      // Simulation mode
+      simulateEmailCampaign(subject, html, customerIds, totalCustomers);
+    } else if (mode === 'cloud-function') {
+      // Real Cloud Function mode
+      if (!sendBulkEmailsFunction) {
+        showToast('Cloud Functions not available. Please deploy them first.', 'error');
+        return;
+      }
+      
+      sendRealEmailCampaign(subject, html, customerIds, totalCustomers);
+    }
+    
+  } catch (error) {
+    console.error('Error preparing email campaign:', error);
+    showToast('Error preparing campaign: ' + error.message, 'error');
+  }
 }
 
-// Export data
-function exportData() {
-  showToast("Exporting data... This may take a moment.", "info");
+// Simulate email campaign
+async function simulateEmailCampaign(subject, html, customerIds, totalCustomers) {
+  showToast(`Simulating email campaign to ${totalCustomers} customers...`, 'info');
   
-  // Simulate export process
+  // Show progress UI
+  const progressUI = document.getElementById('sendingProgress');
+  const progressFill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText');
+  const sentCount = document.getElementById('sentCount');
+  const totalCount = document.getElementById('totalCount');
+  
+  progressUI.style.display = 'block';
+  totalCount.textContent = totalCustomers;
+  
+  let sent = 0;
+  let failed = 0;
+  const errors = [];
+  
+  // Simulate sending with delay
+  for (let i = 0; i < totalCustomers; i++) {
+    await new Promise(resolve => setTimeout(resolve, 50)); // Small delay
+    
+    sent++;
+    const progress = Math.round((sent / totalCustomers) * 100);
+    
+    // Update UI
+    progressFill.style.width = `${progress}%`;
+    progressText.textContent = `${progress}%`;
+    sentCount.textContent = sent;
+    
+    // Randomly fail some emails for realism
+    if (Math.random() < 0.05) { // 5% failure rate
+      failed++;
+      errors.push(`Simulated failure for customer ${i + 1}`);
+    }
+    
+    // Log simulation in Firestore
+    await addDoc(emailLogsCol, {
+      subject: subject,
+      status: Math.random() < 0.95 ? 'sent' : 'failed',
+      sentBy: auth.currentUser.uid,
+      sentAt: new Date(),
+      mode: 'simulation',
+      isSimulation: true
+    });
+  }
+  
+  // Complete
+  progressFill.style.width = '100%';
+  progressText.textContent = '100%';
+  
+  if (errors.length > 0) {
+    document.getElementById('sendErrors').style.display = 'block';
+    document.getElementById('sendErrors').innerHTML = `
+      <strong>Some emails failed:</strong><br>
+      ${errors.slice(0, 3).map(e => `• ${e}`).join('<br>')}
+      ${errors.length > 3 ? `<br>... and ${errors.length - 3} more` : ''}
+    `;
+  }
+  
+  // Add to campaign history
+  addToCampaignHistory({
+    subject: subject,
+    total: totalCustomers,
+    sent: sent - failed,
+    failed: failed,
+    mode: 'simulation',
+    sentAt: new Date()
+  });
+  
+  // Update stats
+  updateEmailStats();
+  updateAnalysis();
+  
   setTimeout(() => {
-    showToast("Data exported successfully! Check your downloads.", "success");
-  }, 1500);
+    progressUI.style.display = 'none';
+    showToast(`Simulation complete: ${sent - failed} sent, ${failed} failed`, 
+              failed > 0 ? 'warning' : 'success');
+  }, 1000);
+  }
+  // Send real email campaign via Cloud Function
+async function sendRealEmailCampaign(subject, html, customerIds, totalCustomers) {
+  showToast(`Starting real email campaign to ${totalCustomers} customers...`, 'info');
+  
+  // Show progress UI
+  const progressUI = document.getElementById('sendingProgress');
+  const progressFill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText');
+  const sentCount = document.getElementById('sentCount');
+  const totalCount = document.getElementById('totalCount');
+  const errorsDiv = document.getElementById('sendErrors');
+  
+  progressUI.style.display = 'block';
+  errorsDiv.style.display = 'none';
+  totalCount.textContent = totalCustomers;
+  
+  try {
+    // Call Cloud Function
+    const result = await sendBulkEmailsFunction({
+      subject: subject,
+      html: html,
+      text: html.replace(/<[^>]*>/g, ''), // Strip HTML tags for text version
+      customerIds: customerIds
+    });
+    
+    const data = result.data;
+    
+    if (data.success) {
+      // Update progress to 100%
+      progressFill.style.width = '100%';
+      progressText.textContent = '100%';
+      sentCount.textContent = data.results.total;
+      
+      // Show results
+      if (data.results.errors.length > 0) {
+        errorsDiv.style.display = 'block';
+        errorsDiv.innerHTML = `
+          <strong>Some emails failed:</strong><br>
+          ${data.results.errors.slice(0, 3).map(e => `• ${e.email}: ${e.error}`).join('<br>')}
+          ${data.results.errors.length > 3 ? `<br>... and ${data.results.errors.length - 3} more` : ''}
+        `;
+      }
+      
+      // Add to campaign history
+      addToCampaignHistory({
+        subject: subject,
+        total: data.results.total,
+        sent: data.results.sent,
+        failed: data.results.failed,
+        mode: 'real',
+        campaignId: data.campaignId,
+        sentAt: new Date()
+      });
+      
+      // Update stats
+      updateEmailStats();
+      updateAnalysis();
+      
+      setTimeout(() => {
+        progressUI.style.display = 'none';
+        showToast(`Campaign sent successfully! ${data.results.sent} sent, ${data.results.failed} failed`, 
+                  data.results.failed > 0 ? 'warning' : 'success');
+      }, 1000);
+    } else {
+      throw new Error('Cloud function returned failure');
+    }
+    
+  } catch (error) {
+    console.error('Error sending email campaign:', error);
+    progressUI.style.display = 'none';
+    showToast('Failed to send campaign: ' + error.message, 'error');
+  }
 }
 
-// Backup data
-function backupData() {
-  showToast("Creating backup...", "info");
+// Send test email
+async function sendTestEmail() {
+  const mode = document.getElementById('emailMode').value;
+  const subject = document.getElementById('campaignSubject').value || 'Test Email from Safar Travel';
+  const html = document.getElementById('campaignMessage').value || '<p>This is a test email from Safar Travel Admin.</p>';
+  const user = auth.currentUser;
   
-  // Simulate backup process
-  setTimeout(() => {
-    showToast("Backup completed successfully!", "success");
-  }, 2000);
+  if (!user) {
+    showToast('You must be logged in to send test emails', 'error');
+    return;
+  }
+  
+  if (mode === 'simulation') {
+    // Simulation mode
+    showToast('Simulating test email to ' + user.email, 'info');
+    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Log simulation
+    await addDoc(emailLogsCol, {
+      to: user.email,
+      subject: subject,
+      status: 'sent',
+      sentBy: user.uid,
+      sentAt: new Date(),
+      mode: 'simulation',
+      isTest: true,
+      isSimulation: true
+    });
+    
+    showToast('Test email simulation complete!', 'success');
+    updateEmailStats();
+    
+  } else if (mode === 'cloud-function') {
+    // Real Cloud Function mode
+    if (!testEmailFunction) {
+      showToast('Cloud Functions not available. Please deploy them first.', 'error');
+      return;
+    }
+    
+    try {
+      showToast('Sending real test email to ' + user.email, 'info');
+      
+      const result = await testEmailFunction({
+        to: user.email,
+        subject: subject,
+        html: html,
+        text: html.replace(/<[^>]*>/g, '')
+      });
+      
+      const data = result.data;
+      
+      if (data.success) {
+        showToast('Test email sent successfully! Message ID: ' + data.messageId, 'success');
+        updateEmailStats();
+      } else {
+        throw new Error('Cloud function returned failure');
+      }
+      
+    } catch (error) {
+      console.error('Error sending test email:', error);
+      showToast('Failed to send test email: ' + error.message, 'error');
+    }
+  }
 }
 
-// Generate report
-function generateReport() {
-  showToast("Generating report...", "info");
+// Add to campaign history
+function addToCampaignHistory(campaign) {
+  const historyDiv = document.getElementById('campaignHistory');
+  const time = campaign.sentAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const date = campaign.sentAt.toLocaleDateString();
   
-  // Simulate report generation
-  setTimeout(() => {
-    showToast("Report generated successfully!", "success");
-  }, 1500);
+  const successRate = Math.round((campaign.sent / campaign.total) * 100);
+  
+  const campaignElement = `
+    <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 10px; border-left: 3px solid ${successRate > 90 ? '#4cc9f0' : '#f8961e'};">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center;">
+        <div>
+          <strong>${campaign.subject}</strong>
+          <div style="font-size: 12px; color: var(--gray); margin-top: 4px;">
+            ${date} at ${time} • ${campaign.mode === 'real' ? 'REAL' : 'SIMULATION'} ${campaign.campaignId ? '• ID: ' + campaign.campaignId : ''}
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <span style="background: rgba(67, 97, 238, 0.1); color: var(--primary); padding: 4px 8px; border-radius: 12px; font-size: 12px;">
+            ${successRate}% success
+          </span>
+        </div>
+      </div>
+      <div style="display: flex; gap: 15px; font-size: 14px; color: var(--gray-light);">
+        <div><i class="fas fa-check-circle"></i> ${campaign.sent} sent</div>
+        <div><i class="fas fa-times-circle"></i> ${campaign.failed} failed</div>
+        <div><i class="fas fa-users"></i> ${campaign.total} total</div>
+      </div>
+    </div>
+  `;
+  
+  if (historyDiv.innerHTML.includes('No campaigns')) {
+    historyDiv.innerHTML = campaignElement;
+  } else {
+    historyDiv.innerHTML = campaignElement + historyDiv.innerHTML;
+  }
+}
+
+// Test Cloud Function connection
+async function testCloudFunction() {
+  const testResult = document.getElementById('testResult');
+  const user = auth.currentUser;
+  
+  if (!user) {
+    showToast('You must be logged in to test Cloud Functions', 'error');
+    return;
+  }
+  
+  testResult.innerHTML = '<div style="color: var(--warning);"><i class="fas fa-spinner fa-spin"></i> Testing Cloud Function connection...</div>';
+  
+  try {
+    // First, check if functions are available
+    if (!testEmailFunction) {
+      if (!initializeCloudFunctions()) {
+        testResult.innerHTML = '<div style="color: var(--danger);"><i class="fas fa-times-circle"></i> Cloud Functions not deployed. Please follow the setup steps above.</div>';
+        return;
+      }
+    }
+    
+    // Try to call a simple test
+    const result = await testEmailFunction({
+      to: user.email,
+      subject: 'Cloud Function Test',
+      html: '<p>This is a test to verify your Cloud Functions are working correctly.</p>',
+      text: 'This is a test to verify your Cloud Functions are working correctly.'
+    });
+    
+    const data = result.data;
+    
+    if (data.success) {
+      testResult.innerHTML = `
+        <div style="color: var(--success);">
+          <i class="fas fa-check-circle"></i> <strong>Cloud Functions Working!</strong>
+          <div style="margin-top: 10px; font-size: 14px;">
+            <div>✓ Functions deployed successfully</div>
+            <div>✓ SMTP configuration working</div>
+            <div>✓ Test email sent to ${user.email}</div>
+            <div>Message ID: ${data.messageId}</div>
+          </div>
+        </div>
+      `;
+      
+      // Enable cloud function mode in settings
+      document.getElementById('emailMode').value = 'cloud-function';
+      toggleEmailMode();
+      
+    } else {
+      throw new Error('Cloud function returned failure');
+    }
+    
+  } catch (error) {
+    console.error('Cloud Function test failed:', error);
+    testResult.innerHTML = `
+      <div style="color: var(--danger);">
+        <i class="fas fa-times-circle"></i> <strong>Cloud Function Test Failed</strong>
+        <div style="margin-top: 10px; font-size: 14px;">
+          <div>Error: ${error.message}</div>
+          <div style="margin-top: 10px;">
+            <strong>Possible issues:</strong>
+            <ul style="margin-left: 20px; margin-top: 5px;">
+              <li>Cloud Functions not deployed</li>
+              <li>SMTP credentials incorrect</li>
+              <li>Firebase project not configured</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+}
+
+// Save settings
+function saveSettings() {
+  const mode = document.getElementById('emailMode').value;
+  
+  APP_SETTINGS.emailMode = mode;
+  localStorage.setItem('safar_settings', JSON.stringify(APP_SETTINGS));
+  
+  showToast('Settings saved successfully!');
+}
+
+// Load settings
+function loadSettings() {
+  const savedSettings = localStorage.getItem('safar_settings');
+  if (savedSettings) {
+    APP_SETTINGS = JSON.parse(savedSettings);
+  }
+  
+  // Update UI
+  document.getElementById('emailMode').value = APP_SETTINGS.emailMode || 'simulation';
+  toggleEmailMode();
 }
 
 // Analysis chart
 let chart = null;
 async function updateAnalysis() {
   try {
-    const snapshot = await getDocs(customersCol);
-    const totalCustomers = snapshot.size;
-    const totalEmails = parseInt(document.getElementById("totalEmails").textContent || 0);
-    const totalWA = parseInt(document.getElementById("totalWA").textContent || 0);
+    const logsSnapshot = await getDocs(query(emailLogsCol, orderBy("sentAt", "desc")));
+    const totalLogs = logsSnapshot.size;
+    
+    // Calculate stats for last 7 days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const recentLogs = logsSnapshot.docs.filter(doc => {
+      const sentAt = doc.data().sentAt?.toDate();
+      return sentAt && sentAt > sevenDaysAgo;
+    });
+    
+    const recentSent = recentLogs.filter(doc => doc.data().status === 'sent').length;
+    const recentFailed = recentLogs.filter(doc => doc.data().status === 'failed').length;
     
     const ctx = document.getElementById("analysisChart").getContext('2d');
     
@@ -1422,10 +2019,10 @@ async function updateAnalysis() {
     chart = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: ['Customers', 'Emails Sent', 'WhatsApp Sent'],
+        labels: ['Total Emails', 'Recent (7 days)', 'Success Rate'],
         datasets: [{
           label: 'Count',
-          data: [totalCustomers, totalEmails, totalWA],
+          data: [totalLogs, recentLogs.length, recentLogs.length > 0 ? Math.round((recentSent / recentLogs.length) * 100) : 0],
           backgroundColor: [
             'rgba(67, 97, 238, 0.7)',
             'rgba(76, 201, 240, 0.7)',
@@ -1446,6 +2043,22 @@ async function updateAnalysis() {
         plugins: {
           legend: {
             display: false
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                let label = context.dataset.label || '';
+                if (label) {
+                  label += ': ';
+                }
+                if (context.dataIndex === 2) {
+                  label += context.raw + '%';
+                } else {
+                  label += context.raw;
+                }
+                return label;
+              }
+            }
           }
         },
         scales: {
@@ -1494,12 +2107,19 @@ function initApp() {
       loadCustomers();
       updateAnalysis();
       updateCurrentDate();
+      loadSettings();
+      initializeCloudFunctions();
     }
   });
   
-  // Set up real-time listener for customers
+  // Set up real-time listeners
   onSnapshot(customersCol, (snapshot) => {
     loadCustomers();
+    updateAnalysis();
+  });
+  
+  onSnapshot(emailLogsCol, (snapshot) => {
+    updateEmailStats();
     updateAnalysis();
   });
   
@@ -1523,18 +2143,6 @@ function initApp() {
       sidebar.classList.remove('open');
     }
   });
-  
-  // Load saved email settings
-  const savedSender = localStorage.getItem('safar_email_sender');
-  const savedReplyTo = localStorage.getItem('safar_email_replyto');
-  
-  if (savedSender) {
-    document.getElementById("emailSenderName").value = savedSender;
-  }
-  
-  if (savedReplyTo) {
-    document.getElementById("emailReplyTo").value = savedReplyTo;
-  }
 }
 
 // Initialize when DOM is loaded
@@ -1547,11 +2155,10 @@ window.addCustomer = addCustomer;
 window.deleteCustomer = deleteCustomer;
 window.sendEmailCampaign = sendEmailCampaign;
 window.sendTestEmail = sendTestEmail;
-window.changeTemplate = changeTemplate;
-window.saveEmailSettings = saveEmailSettings;
-window.exportData = exportData;
-window.backupData = backupData;
-window.generateReport = generateReport;
+window.loadTemplate = loadTemplate;
+window.toggleEmailMode = toggleEmailMode;
+window.testCloudFunction = testCloudFunction;
+window.saveSettings = saveSettings;
 window.showTab = showTab;
 </script>
 </body>
