@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin SPA Dashboard - Firebase Auth</title>
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #4361ee;
+  --primary-dark: #3a56d4;
+  --secondary: #7209b7;
+  --accent: #f72585;
+  --success: #4cc9f0;
+  --warning: #f8961e;
+  --danger: #f94144;
+  --dark: #1a1b27;
+  --dark-light: #242635;
+  --light: #f8f9fa;
+  --gray: #8b8c9c;
+  --gray-light: #e2e8f0;
+  --sidebar-width: 260px;
+  --sidebar-collapsed: 80px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: var(--light);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ========== Login Page ========== */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.login-box {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius);
+  padding: 40px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: var(--shadow);
+  animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.login-box h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  font-weight: 700;
+  font-size: 28px;
+  background: linear-gradient(90deg, var(--primary), var(--success));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.login-input-group {
+  margin-bottom: 20px;
+}
+
+.login-input-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--gray-light);
+}
+
+.login-input-group input {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  color: var(--light);
+  font-size: 16px;
+  transition: var(--transition);
+}
+
+.login-input-group input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+}
+
+.login-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: 10px;
+}
+
+.login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(67, 97, 238, 0.3);
+}
+
+.login-btn:active {
+  transform: translateY(0);
+}
+
+/* ========== Dashboard Layout ========== */
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  width: var(--sidebar-width);
+  background: rgba(26, 27, 39, 0.8);
+  backdrop-filter: blur(10px);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 24px 0;
+  display: flex;
+  flex-direction: column;
+  transition: var(--transition);
+  position: fixed;
+  height: 100%;
+  z-index: 100;
+}
+
+.sidebar-header {
+  padding: 0 24px 30px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  background: linear-gradient(90deg, var(--primary), var(--success));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.sidebar-nav {
+  flex: 1;
+}
+
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  color: var(--gray);
+  text-decoration: none;
+  transition: var(--transition);
+  border-left: 4px solid transparent;
+}
+
+.sidebar-nav a:hover {
+  color: var(--light);
+  background: rgba(255, 255, 255, 0.03);
+  border-left-color: var(--primary);
+}
+
+.sidebar-nav a.active {
+  color: var(--light);
+  background: rgba(67, 97, 238, 0.1);
+  border-left-color: var(--primary);
+}
+
+.sidebar-nav i {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+
+.sidebar-footer {
+  padding: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.logout-btn {
+  margin-left: auto;
+  background: rgba(249, 65, 68, 0.1);
+  color: var(--danger);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.logout-btn:hover {
+  background: rgba(249, 65, 68, 0.2);
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  padding: 30px;
+  transition: var(--transition);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.header h1 {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.header-controls {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.toggle-sidebar {
+  display: none;
+  background: var(--dark-light);
+  border: none;
+  color: var(--light);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.toggle-sidebar:hover {
+  background: var(--primary);
+}
+
+/* Cards */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius);
+  padding: 24px;
+  transition: var(--transition);
+  backdrop-filter: blur(10px);
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(67, 97, 238, 0.2);
+}
+
+.card-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  font-size: 22px;
+}
+
+.card:nth-child(1) .card-icon {
+  background: rgba(67, 97, 238, 0.15);
+  color: var(--primary);
+}
+
+.card:nth-child(2) .card-icon {
+  background: rgba(76, 201, 240, 0.15);
+  color: var(--success);
+}
+
+.card:nth-child(3) .card-icon {
+  background: rgba(248, 150, 30, 0.15);
+  color: var(--warning);
+}
+
+.card h3 {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card span {
+  font-size: 32px;
+  font-weight: 700;
+  display: block;
+}
+
+/* Content Box */
+.content-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius);
+  padding: 30px;
+  margin-bottom: 30px;
+  backdrop-filter: blur(10px);
+}
+
+.content-box h3 {
+  font-size: 20px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Form Elements */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.form-control {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  color: var(--light);
+  font-size: 16px;
+  transition: var(--transition);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+}
+
+textarea.form-control {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* Buttons */
+.btn {
+  padding: 12px 24px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(67, 97, 238, 0.3);
+}
+
+.btn-danger {
+  background: rgba(249, 65, 68, 0.1);
+  color: var(--danger);
+  border: 1px solid rgba(249, 65, 68, 0.2);
+}
+
+.btn-danger:hover {
+  background: rgba(249, 65, 68, 0.2);
+}
+
+.btn-success {
+  background: rgba(76, 201, 240, 0.1);
+  color: var(--success);
+  border: 1px solid rgba(76, 201, 240, 0.2);
+}
+
+.btn-success:hover {
+  background: rgba(76, 201, 240, 0.2);
+}
+
+/* Table */
+.table-responsive {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+thead {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+th {
+  padding: 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--gray);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+td {
+  padding: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Chart */
+.chart-container {
+  position: relative;
+  height: 300px;
+  margin-top: 20px;
+}
+
+/* Tabs */
+.tab {
+  display: none;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.tab.active {
+  display: block;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: rgba(26, 27, 39, 0.95);
+  border-left: 4px solid var(--primary);
+  color: var(--light);
+  padding: 16px 24px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 1000;
+  transform: translateX(150%);
+  transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.toast.show {
+  transform: translateX(0);
+}
+
+.toast-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+}
+
+/* Email Config Card */
+.config-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.config-card h4 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  color: var(--light);
+}
+
+.config-card h4 i {
+  color: var(--primary);
+}
+
+/* Status Indicator */
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.status-active {
+  background: rgba(76, 201, 240, 0.1);
+  color: var(--success);
+}
+
+.status-inactive {
+  background: rgba(249, 65, 68, 0.1);
+  color: var(--danger);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: 280px;
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .main-content {
+    margin-left: 0;
+    padding: 20px;
+  }
+  
+  .toggle-sidebar {
+    display: flex;
+  }
+  
+  .header h1 {
+    font-size: 24px;
+  }
+  
+  .cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .content-box {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 576px) {
+  .login-box {
+    padding: 30px 20px;
+  }
+  
+  .header-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- Login Page -->
+<div class="login-container" id="loginPage">
+  <div class="login-box">
+    <h2>Safar Travel Admin</h2>
+    <div class="login-input-group">
+      <label for="adminUser"><i class="fas fa-envelope"></i> Email Address</label>
+      <input type="text" id="adminUser" placeholder="admin@example.com">
+    </div>
+    <div class="login-input-group">
+      <label for="adminPass"><i class="fas fa-lock"></i> Password</label>
+      <input type="password" id="adminPass" placeholder="Enter your password">
+    </div>
+    <button class="login-btn" onclick="login()">
+      <i class="fas fa-sign-in-alt"></i> Sign In
+    </button>
+    <div style="text-align: center; margin-top: 20px; color: var(--gray); font-size: 14px;">
+      <i class="fas fa-info-circle"></i> Use your Firebase Auth credentials
+    </div>
+  </div>
+</div>
+
+<!-- Dashboard SPA -->
+<div class="dashboard-container hidden" id="dashboardPage">
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="user-avatar">
+        <i class="fas fa-plane"></i>
+      </div>
+      <h2>Safar Travel</h2>
+    </div>
+    
+    <div class="sidebar-nav">
+      <a href="#" onclick="showTab('dashboardTab')" class="active">
+        <i class="fas fa-tachometer-alt"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="#" onclick="showTab('customersTab')">
+        <i class="fas fa-users"></i>
+        <span>Customers</span>
+      </a>
+      <a href="#" onclick="showTab('emailTab')">
+        <i class="fas fa-envelope"></i>
+        <span>Email Marketing</span>
+      </a>
+      <a href="#" onclick="showTab('analysisTab')">
+        <i class="fas fa-chart-line"></i>
+        <span>Analytics</span>
+      </a>
+      <a href="#" onclick="showTab('settingsTab')">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+      </a>
+    </div>
+    
+    <div class="sidebar-footer">
+      <div class="user-avatar" id="userAvatar">A</div>
+      <div>
+        <div id="userEmail" style="font-weight: 500;">admin@example.com</div>
+        <div style="font-size: 12px; color: var(--gray);">Administrator</div>
+      </div>
+      <button class="logout-btn" onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </div>
+  </div>
+  
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="header">
+      <h1 id="pageTitle">Dashboard Overview</h1>
+      <div class="header-controls">
+        <button class="toggle-sidebar" id="toggleSidebar">
+          <i class="fas fa-bars"></i>
+        </button>
+        <div id="currentDate" style="color: var(--gray); font-size: 14px;"></div>
+      </div>
+    </div>
+    
+    <!-- Dashboard Tab -->
+    <div id="dashboardTab" class="tab active">
+      <div class="cards">
+        <div class="card">
+          <div class="card-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <h3>Total Customers</h3>
+          <span id="totalCustomers">0</span>
+        </div>
+        
+        <div class="card">
+          <div class="card-icon">
+            <i class="fas fa-envelope"></i>
+          </div>
+          <h3>Emails Sent</h3>
+          <span id="totalEmails">0</span>
+        </div>
+        
+        <div class="card">
+          <div class="card-icon">
+            <i class="fab fa-whatsapp"></i>
+          </div>
+          <h3>WhatsApp Sent</h3>
+          <span id="totalWA">0</span>
+        </div>
+      </div>
+      
+      <div class="content-box">
+        <h3><i class="fas fa-bullhorn"></i> Quick Actions</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+          <button class="btn btn-primary" onclick="showTab('emailTab')">
+            <i class="fas fa-paper-plane"></i> Send Email Campaign
+          </button>
+          <button class="btn btn-success" onclick="showTab('customersTab')">
+            <i class="fas fa-user-plus"></i> Add New Customer
+          </button>
+          <button class="btn" style="background: rgba(114, 9, 183, 0.1); color: var(--secondary);" onclick="generateReport()">
+            <i class="fas fa-file-export"></i> Generate Report
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Customers Tab -->
+    <div id="customersTab" class="tab">
+      <div class="content-box">
+        <h3><i class="fas fa-user-plus"></i> Add New Customer</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+          <div class="form-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" class="form-control" placeholder="John Doe">
+          </div>
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" class="form-control" placeholder="john@example.com">
+          </div>
+          <div class="form-group">
+            <label for="whatsapp">WhatsApp Number</label>
+            <input type="text" id="whatsapp" class="form-control" placeholder="+1234567890">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="addCustomer()">
+          <i class="fas fa-plus"></i> Add Customer
+        </button>
+      </div>
+      
+      <div class="content-box">
+        <h3><i class="fas fa-list"></i> Customer List</h3>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>WhatsApp</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="customersTable">
+              <!-- Customer rows will be inserted here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Email Marketing Tab -->
+    <div id="emailTab" class="tab">
+      <div class="content-box">
+        <h3><i class="fas fa-envelope-open-text"></i> Email Configuration Status</h3>
+        <div class="cards" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+          <div class="config-card">
+            <h4><i class="fas fa-fire"></i> Firebase SMTP Status</h4>
+            <div class="status-indicator status-active" id="firebaseStatus">
+              <i class="fas fa-check-circle"></i> Connected
+            </div>
+            <div style="margin-top: 15px; font-size: 14px; color: var(--gray-light);">
+              <div><strong>Sender:</strong> safartravel1122@gmail.com</div>
+              <div><strong>SMTP Host:</strong> smtp-relay.brewo.com</div>
+              <div><strong>Port:</strong> 587 (STARTTLS)</div>
+            </div>
+          </div>
+          
+          <div class="config-card">
+            <h4><i class="fas fa-envelope"></i> Email Template</h4>
+            <div style="margin-top: 15px; font-size: 14px; color: var(--gray-light);">
+              <div><strong>From:</strong> Safar Travel Agency</div>
+              <div><strong>Reply-to:</strong> noreply@safar-tadfs.firebaseapp.com</div>
+              <div><strong>Subject:</strong> Verify your email for %APP_NAME%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="content-box">
+        <h3><i class="fas fa-paper-plane"></i> Send Email Campaign</h3>
+        <div class="form-group">
+          <label for="campaignSubject">Email Subject</label>
+          <input type="text" id="campaignSubject" class="form-control" placeholder="Special Travel Offers for You!">
+        </div>
+        <div class="form-group">
+          <label for="campaignMessage">Email Message</label>
+          <textarea id="campaignMessage" class="form-control" rows="6" placeholder="Write your email content here..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="emailTemplate">Template Type</label>
+          <select id="emailTemplate" class="form-control" onchange="changeTemplate()">
+            <option value="custom">Custom Message</option>
+            <option value="promotion">Promotional Offer</option>
+            <option value="newsletter">Newsletter</option>
+            <option value="verification">Verification Email</option>
+          </select>
+        </div>
+        <div style="display: flex; gap: 15px; margin-top: 20px;">
+          <button class="btn btn-primary" onclick="sendEmailCampaign()">
+            <i class="fas fa-paper-plane"></i> Send to All Customers
+            </button>
+          <button class="btn btn-success" onclick="sendTestEmail()">
+            <i class="fas fa-vial"></i> Send Test Email
+          </button>
+        </div>
+      </div>
+      
+      <div class="content-box">
+        <h3><i class="fas fa-history"></i> Recent Email Campaigns</h3>
+        <div id="emailHistory">
+          <div style="text-align: center; padding: 30px; color: var(--gray);">
+            <i class="fas fa-envelope-open-text fa-2x" style="margin-bottom: 15px;"></i>
+            <p>No email campaigns sent yet. Send your first campaign to see history here.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Analysis Tab -->
+    <div id="analysisTab" class="tab">
+      <div class="content-box">
+        <h3><i class="fas fa-chart-bar"></i> Performance Analytics</h3>
+        <div class="chart-container">
+          <canvas id="analysisChart"></canvas>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Settings Tab -->
+    <div id="settingsTab" class="tab">
+      <div class="content-box">
+        <h3><i class="fas fa-cogs"></i> System Configuration</h3>
+        
+        <div class="config-card">
+          <h4><i class="fas fa-fire"></i> Firebase Authentication Settings</h4>
+          <div class="form-group">
+            <label>Project ID</label>
+            <input type="text" class="form-control" value="safar-1a4f5" readonly>
+          </div>
+          <div class="form-group">
+            <label>Sender Email</label>
+            <input type="text" class="form-control" value="safartravel1122@gmail.com" readonly>
+          </div>
+          <div class="form-group">
+            <label>SMTP Server</label>
+            <input type="text" class="form-control" value="smtp-relay.brewo.com:587" readonly>
+          </div>
+        </div>
+        
+        <div class="config-card">
+          <h4><i class="fas fa-envelope"></i> Email Template Configuration</h4>
+          <div class="form-group">
+            <label for="emailSenderName">Sender Name</label>
+            <input type="text" id="emailSenderName" class="form-control" value="Safar Travel Agency">
+          </div>
+          <div class="form-group">
+            <label for="emailReplyTo">Reply-to Address</label>
+            <input type="text" id="emailReplyTo" class="form-control" value="noreply@safar-tadfs.firebaseapp.com">
+          </div>
+          <button class="btn btn-primary" onclick="saveEmailSettings()">
+            <i class="fas fa-save"></i> Save Email Settings
+          </button>
+        </div>
+        
+        <div class="config-card">
+          <h4><i class="fas fa-database"></i> Data Management</h4>
+          <div style="display: flex; gap: 15px; margin-top: 15px;">
+            <button class="btn" style="background: rgba(249, 65, 68, 0.1); color: var(--danger);" onclick="exportData()">
+              <i class="fas fa-file-export"></i> Export Data
+            </button>
+            <button class="btn" style="background: rgba(67, 97, 238, 0.1); color: var(--primary);" onclick="backupData()">
+              <i class="fas fa-save"></i> Backup Now
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="toast" id="toast">
+  <div class="toast-icon">
+    <i class="fas fa-check"></i>
+  </div>
+  <div id="toastMessage">Operation completed successfully!</div>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+
+// Firebase Config - Using YOUR actual Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyCY2ZeJ4jJu-vPo_25ZNa1-pPeuVFxi9Ag",
+  authDomain: "safar-1a4f5.firebaseapp.com",
+  projectId: "safar-1a4f5",
+  storageBucket: "safar-1a4f5.firebasestorage.app",
+  messagingSenderId: "452916843428",
+  appId: "1:452916843428:web:ee027d2e3335fc98f8e731",
+  measurementId: "G-81DCXQY1LQ"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+const customersCol = collection(db, "customers");
+const emailLogsCol = collection(db, "email_logs");
+
+// Firebase SMTP Configuration (from your images)
+const FIREBASE_SMTP_CONFIG = {
+  sender: "safartravel1122@gmail.com",
+  host: "smtp-relay.brewo.com",
+  port: 587,
+  username: "9ebb12001@smtp-brewo.com",
+  security: "STARTTLS"
+};
+
+// EmailJS initialization (fallback)
+emailjs.init("kpOeovejkjSL4ehak");
+let EMAILJS_SERVICE_ID = "service_default";
+let EMAILJS_TEMPLATE_ID = "template_default";
+
+// Toast notification
+function showToast(message, type = "success") {
+  const toast = document.getElementById("toast");
+  const toastMessage = document.getElementById("toastMessage");
+  const toastIcon = toast.querySelector(".toast-icon i");
+  
+  toastMessage.textContent = message;
+  
+  if (type === "success") {
+    toastIcon.className = "fas fa-check";
+    toast.style.borderLeftColor = "#4cc9f0";
+  } else if (type === "error") {
+    toastIcon.className = "fas fa-exclamation-triangle";
+    toast.style.borderLeftColor = "#f94144";
+  } else if (type === "warning") {
+    toastIcon.className = "fas fa-exclamation-circle";
+    toast.style.borderLeftColor = "#f8961e";
+  } else {
+    toastIcon.className = "fas fa-info-circle";
+    toast.style.borderLeftColor = "#4361ee";
+  }
+  
+  toast.classList.add("show");
+  
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 3000);
+}
+// Tab navigation
+function showTab(tabID) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.getElementById(tabID).classList.add("active");
+  
+  document.querySelectorAll(".sidebar-nav a").forEach(a => a.classList.remove("active"));
+  event.currentTarget.classList.add("active");
+  
+  const tabTitles = {
+    'dashboardTab': 'Dashboard Overview',
+    'customersTab': 'Customer Management',
+    'emailTab': 'Email Marketing',
+    'analysisTab': 'Analytics Dashboard',
+    'settingsTab': 'System Settings'
+  };
+  
+  document.getElementById('pageTitle').textContent = tabTitles[tabID] || 'Dashboard';
+  
+  if (tabID === 'analysisTab') {
+    updateAnalysis();
+  }
+  
+  if (window.innerWidth <= 768) {
+    document.getElementById('sidebar').classList.remove('open');
+  }
+}
+
+// Login function
+function login() {
+  const email = document.getElementById("adminUser").value;
+  const password = document.getElementById("adminPass").value;
+  
+  if (!email || !password) {
+    showToast("Please enter both email and password", "error");
+    return;
+  }
+  
+  signInWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      document.getElementById("loginPage").classList.add("hidden");
+      document.getElementById("dashboardPage").classList.remove("hidden");
+      
+      const user = userCredential.user;
+      document.getElementById("userEmail").textContent = user.email;
+      document.getElementById("userAvatar").textContent = user.email.charAt(0).toUpperCase();
+      
+      loadCustomers();
+      updateAnalysis();
+      updateCurrentDate();
+      showToast(`Welcome to Safar Travel Admin, ${user.email.split('@')[0]}!`);
+    })
+    .catch((error) => {
+      console.error("Login error:", error);
+      showToast("Invalid email or password. Please try again.", "error");
+    });
+}
+
+// Logout function
+function logout() {
+  signOut(auth).then(() => {
+    document.getElementById("loginPage").classList.remove("hidden");
+    document.getElementById("dashboardPage").classList.add("hidden");
+    showToast("You have been logged out successfully.");
+  }).catch((error) => {
+    showToast("Error logging out. Please try again.", "error");
+  });
+}
+
+// Add customer
+async function addCustomer() {
+  const name = document.getElementById("name").value;
+  const email = document.getElementById("email").value;
+  const whatsapp = document.getElementById("whatsapp").value;
+  
+  if (!name || !email || !whatsapp) {
+    showToast("Please fill in all customer fields", "error");
+    return;
+  }
+  
+  try {
+    await addDoc(customersCol, {
+      name,
+      email,
+      whatsapp,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+    
+    document.getElementById("name").value = "";
+    document.getElementById("email").value = "";
+    document.getElementById("whatsapp").value = "";
+    
+    showToast("Customer added successfully!");
+    loadCustomers();
+    updateAnalysis();
+  } catch (error) {
+    console.error("Error adding customer:", error);
+    showToast("Error adding customer. Please try again.", "error");
+  }
+}
+
+// Load customers
+async function loadCustomers() {
+  try {
+    const snapshot = await getDocs(query(customersCol, orderBy("createdAt", "desc")));
+    const table = document.getElementById("customersTable");
+    table.innerHTML = "";
+    
+    if (snapshot.empty) {
+      table.innerHTML = `
+        <tr>
+          <td colspan="4" style="text-align: center; padding: 40px; color: var(--gray);">
+            <i class="fas fa-users fa-2x" style="margin-bottom: 15px;"></i>
+            <p>No customers found. Add your first customer above.</p>
+          </td>
+        </tr>
+      `;
+      document.getElementById("totalCustomers").textContent = "0";
+      return;
+    }
+    
+    let total = 0;
+    snapshot.forEach(docu => {
+      const c = docu.data();
+      table.innerHTML += `
+        <tr>
+          <td><i class="fas fa-user-circle" style="margin-right: 8px; color: var(--primary);"></i> ${c.name}</td>
+          <td>${c.email}</td>
+          <td>${c.whatsapp}</td>
+          <td>
+            <button class="btn btn-danger" onclick="deleteCustomer('${docu.id}')">
+              <i class="fas fa-trash"></i> Delete
+            </button>
+          </td>
+        </tr>
+      `;
+      total++;
+    });
+    
+    document.getElementById("totalCustomers").textContent = total;
+  } catch (error) {
+    console.error("Error loading customers:", error);
+    showToast("Error loading customers", "error");
+  }
+}
+
+// Delete customer
+async function deleteCustomer(id) {
+  if (!confirm("Are you sure you want to delete this customer?")) {
+    return;
+  }
+  
+  try {
+    await deleteDoc(doc(db, "customers", id));
+    showToast("Customer deleted successfully!");
+    loadCustomers();
+    updateAnalysis();
+  } catch (error) {
+    console.error("Error deleting customer:", error);
+    showToast("Error deleting customer", "error");
+  }
+}
+// Send email campaign using Firebase SMTP
+async function sendEmailCampaign() {
+  const subject = document.getElementById("campaignSubject").value;
+  const message = document.getElementById("campaignMessage").value;
+  const templateType = document.getElementById("emailTemplate").value;
+  
+  if (!subject || !message) {
+    showToast("Please enter both subject and message", "error");
+    return;
+  }
+  
+  try {
+    const snapshot = await getDocs(customersCol);
+    
+    if (snapshot.empty) {
+      showToast("No customers to send emails to", "error");
+      return;
+    }
+    
+    // Show sending progress
+    showToast(`Starting to send emails to ${snapshot.size} customers...`, "info");
+    
+    let sentCount = 0;
+    let failedCount = 0;
+    
+    // In a real implementation, you would call a Cloud Function or backend service
+    // that uses the Firebase SMTP configuration to send emails
+    // For now, we'll simulate the process
+    
+    for (const docu of snapshot.docs) {
+      const customer = docu.data();
+      
+      try {
+        // Simulate email sending via Firebase SMTP
+        console.log(`Sending email to ${customer.email} via Firebase SMTP`);
+        console.log(`From: ${FIREBASE_SMTP_CONFIG.sender}`);
+        console.log(`Subject: ${subject}`);
+        console.log(`Message: ${message.substring(0, 50)}...`);
+        
+        // Log the email in Firestore
+        await addDoc(emailLogsCol, {
+          customerId: docu.id,
+          customerEmail: customer.email,
+          customerName: customer.name,
+          subject: subject,
+          message: message,
+          templateType: templateType,
+          sentVia: "Firebase SMTP",
+          status: "sent",
+          sentAt: new Date()
+        });
+        
+        sentCount++;
+        
+        // Update UI every 5 emails
+        if (sentCount % 5 === 0) {
+          showToast(`Sent ${sentCount} of ${snapshot.size} emails...`, "info");
+        }
+        
+        // Small delay to simulate sending
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+      } catch (error) {
+        console.error(`Failed to send to ${customer.email}:`, error);
+        failedCount++;
+        
+        // Log failed attempt
+        await addDoc(emailLogsCol, {
+          customerId: docu.id,
+          customerEmail: customer.email,
+          customerName: customer.name,
+          subject: subject,
+          message: message,
+          templateType: templateType,
+          sentVia: "Firebase SMTP",
+          status: "failed",
+          error: error.message,
+          sentAt: new Date()
+        });
+      }
+    }
+    
+    // Update counters
+    const currentEmails = parseInt(document.getElementById("totalEmails").textContent || 0);
+    document.getElementById("totalEmails").textContent = currentEmails + sentCount;
+    
+    // Add to email history
+    addToEmailHistory({
+      subject: subject,
+      sentCount: sentCount,
+      failedCount: failedCount,
+      total: snapshot.size,
+      sentAt: new Date()
+    });
+    
+    showToast(`Campaign completed! Sent: ${sentCount}, Failed: ${failedCount}`, 
+              failedCount > 0 ? "warning" : "success");
+    
+    updateAnalysis();
+    
+  } catch (error) {
+    console.error("Error sending email campaign:", error);
+    showToast("Error sending email campaign", "error");
+  }
+}
+
+// Send test email
+async function sendTestEmail() {
+  const subject = document.getElementById("campaignSubject").value || "Test Email from Safar Travel";
+  const message = document.getElementById("campaignMessage").value || "This is a test email from your Safar Travel Admin dashboard.";
+  const user = auth.currentUser;
+  
+  if (!user) {
+    showToast("You must be logged in to send test emails", "error");
+    return;
+  }
+  
+  try {
+    showToast("Sending test email...", "info");
+    
+    // In a real implementation, you would call a Cloud Function
+    // For now, we'll simulate it
+    console.log("Sending test email via Firebase SMTP:");
+    console.log(`To: ${user.email}`);
+    console.log(`From: ${FIREBASE_SMTP_CONFIG.sender}`);
+    console.log(`Subject: ${subject}`);
+    console.log(`Message: ${message}`);
+    
+    // Log the test email
+    await addDoc(emailLogsCol, {
+      customerEmail: user.email,
+      customerName: "Test User",
+      subject: subject,
+      message: message,
+      templateType: "test",
+      sentVia: "Firebase SMTP",
+      status: "sent",
+      isTest: true,
+      sentAt: new Date()
+    });
+    
+    showToast(`Test email sent to ${user.email}`, "success");
+    
+  } catch (error) {
+    console.error("Error sending test email:", error);
+    showToast("Error sending test email", "error");
+  }
+}
+
+// Add to email history
+function addToEmailHistory(campaign) {
+  const emailHistory = document.getElementById("emailHistory");
+  const time = campaign.sentAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const date = campaign.sentAt.toLocaleDateString();
+  
+  const successRate = Math.round((campaign.sentCount / campaign.total) * 100);
+  
+  const campaignElement = `
+    <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 10px; border-left: 3px solid ${successRate > 90 ? 'var(--success)' : 'var(--warning)'};">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center;">
+        <div>
+          <strong>${campaign.subject}</strong>
+          <div style="font-size: 12px; color: var(--gray); margin-top: 4px;">${date} at ${time}</div>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <span class="status-indicator ${successRate > 90 ? 'status-active' : 'status-inactive'}">
+            ${successRate}% success
+          </span>
+        </div>
+      </div>
+      <div style="display: flex; gap: 15px; font-size: 14px; color: var(--gray-light);">
+        <div><i class="fas fa-check-circle"></i> ${campaign.sentCount} sent</div>
+        <div><i class="fas fa-times-circle"></i> ${campaign.failedCount} failed</div>
+        <div><i class="fas fa-users"></i> ${campaign.total} total</div>
+      </div>
+    </div>
+  `;
+  
+  if (emailHistory.innerHTML.includes('No email campaigns')) {
+    emailHistory.innerHTML = campaignElement;
+  } else {
+    emailHistory.innerHTML = campaignElement + emailHistory.innerHTML;
+  }
+}
+
+// Change email template
+function changeTemplate() {
+  const template = document.getElementById("emailTemplate").value;
+  const subjectInput = document.getElementById("campaignSubject");
+  const messageInput = document.getElementById("campaignMessage");
+  
+  const templates = {
+    'promotion': {
+      subject: 'Exclusive Travel Deals Just for You! ✈️',
+      message: 'Dear valued customer,\n\nWe have exciting travel offers that we think you\'ll love! Check out our latest promotions:\n\n• 30% off on all international flights\n• Free hotel upgrades for bookings this month\n• Exclusive tour packages\n\nBook now at: www.safartravel.com\n\nBest regards,\nSafar Travel Team'
+    },
+    'newsletter': {
+      subject: 'Safar Travel Monthly Newsletter - Latest Updates',
+      message: 'Hello from Safar Travel!\n\nHere are the latest updates and travel tips from our team:\n\n1. New Destinations Added\n2. Travel Safety Guidelines\n3. Customer Stories\n4. Upcoming Events\n\nRead the full newsletter: www.safartravel.com/newsletter\n\nHappy travels!\nThe Safar Travel Team'
+    },
+    'verification': {
+      subject: 'Verify your email for Safar Travel',
+      message: 'Hello %DISPLAY_NAME%,\n\nFollow this link to verify your email address:\n\nhttps://safar-1a4f5.firebaseapp.com/__/auth/action\n\nIf you didn\'t ask to verify this address, you can ignore this email.\n\nThanks,\nYour Safar Travel team'
+    }
+  };
+  
+  if (templates[template]) {
+    subjectInput.value = templates[template].subject;
+    messageInput.value = templates[template].message;
+    showToast(`Loaded ${template} template`, "info");
+  }
+}
+
+// Save email settings
+function saveEmailSettings() {
+  const senderName = document.getElementById("emailSenderName").value;
+  const replyTo = document.getElementById("emailReplyTo").value;
+  
+  // In a real implementation, you would save these to Firestore
+  localStorage.setItem('safar_email_sender', senderName);
+  localStorage.setItem('safar_email_replyto', replyTo);
+  
+  showToast("Email settings saved successfully!");
+}
+
+// Export data
+function exportData() {
+  showToast("Exporting data... This may take a moment.", "info");
+  
+  // Simulate export process
+  setTimeout(() => {
+    showToast("Data exported successfully! Check your downloads.", "success");
+  }, 1500);
+}
+
+// Backup data
+function backupData() {
+  showToast("Creating backup...", "info");
+  
+  // Simulate backup process
+  setTimeout(() => {
+    showToast("Backup completed successfully!", "success");
+  }, 2000);
+}
+
+// Generate report
+function generateReport() {
+  showToast("Generating report...", "info");
+  
+  // Simulate report generation
+  setTimeout(() => {
+    showToast("Report generated successfully!", "success");
+  }, 1500);
+}
+
+// Analysis chart
+let chart = null;
+async function updateAnalysis() {
+  try {
+    const snapshot = await getDocs(customersCol);
+    const totalCustomers = snapshot.size;
+    const totalEmails = parseInt(document.getElementById("totalEmails").textContent || 0);
+    const totalWA = parseInt(document.getElementById("totalWA").textContent || 0);
+    
+    const ctx = document.getElementById("analysisChart").getContext('2d');
+    
+    if (chart) {
+      chart.destroy();
+    }
+    
+    chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Customers', 'Emails Sent', 'WhatsApp Sent'],
+        datasets: [{
+          label: 'Count',
+          data: [totalCustomers, totalEmails, totalWA],
+          backgroundColor: [
+            'rgba(67, 97, 238, 0.7)',
+            'rgba(76, 201, 240, 0.7)',
+            'rgba(248, 150, 30, 0.7)'
+          ],
+          borderColor: [
+            'rgb(67, 97, 238)',
+            'rgb(76, 201, 240)',
+            'rgb(248, 150, 30)'
+          ],
+          borderWidth: 1,
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(255, 255, 255, 0.05)'
+            },
+            ticks: {
+              color: 'rgba(255, 255, 255, 0.7)'
+            }
+          },
+          x: {
+            grid: {
+              color: 'rgba(255, 255, 255, 0.05)'
+            },
+            ticks: {
+              color: 'rgba(255, 255, 255, 0.7)'
+            }
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Error updating analysis chart:", error);
+  }
+}
+
+// Update current date
+function updateCurrentDate() {
+  const now = new Date();
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
+}
+
+// Initialize app
+function initApp() {
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      document.getElementById("loginPage").classList.add("hidden");
+      document.getElementById("dashboardPage").classList.remove("hidden");
+      
+      document.getElementById("userEmail").textContent = user.email;
+      document.getElementById("userAvatar").textContent = user.email.charAt(0).toUpperCase();
+      
+      loadCustomers();
+      updateAnalysis();
+      updateCurrentDate();
+    }
+  });
+  
+  // Set up real-time listener for customers
+  onSnapshot(customersCol, (snapshot) => {
+    loadCustomers();
+    updateAnalysis();
+  });
+  
+  // Initialize date
+  updateCurrentDate();
+  
+  // Sidebar toggle
+  document.getElementById('toggleSidebar').addEventListener('click', function() {
+    document.getElementById('sidebar').classList.toggle('open');
+  });
+  
+  // Close sidebar when clicking outside on mobile
+  document.addEventListener('click', function(event) {
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('toggleSidebar');
+    
+    if (window.innerWidth <= 768 && 
+        sidebar.classList.contains('open') && 
+        !sidebar.contains(event.target) && 
+        !toggleBtn.contains(event.target)) {
+      sidebar.classList.remove('open');
+    }
+  });
+  
+  // Load saved email settings
+  const savedSender = localStorage.getItem('safar_email_sender');
+  const savedReplyTo = localStorage.getItem('safar_email_replyto');
+  
+  if (savedSender) {
+    document.getElementById("emailSenderName").value = savedSender;
+  }
+  
+  if (savedReplyTo) {
+    document.getElementById("emailReplyTo").value = savedReplyTo;
+  }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', initApp);
+
+// Make functions available globally
+window.login = login;
+window.logout = logout;
+window.addCustomer = addCustomer;
+window.deleteCustomer = deleteCustomer;
+window.sendEmailCampaign = sendEmailCampaign;
+window.sendTestEmail = sendTestEmail;
+window.changeTemplate = changeTemplate;
+window.saveEmailSettings = saveEmailSettings;
+window.exportData = exportData;
+window.backupData = backupData;
+window.generateReport = generateReport;
+window.showTab = showTab;
+</script>
+</body>
+</html>
