@@ -1163,7 +1163,7 @@ async function deleteCustomer(id) {
   }
 }
 
-// Send email campaign using EmailJS
+  // Send email campaign using EmailJS
 async function sendEmailCampaign() {
   const subject = document.getElementById("campaignSubject").value;
   const message = document.getElementById("campaignMessage").value;
@@ -1241,7 +1241,10 @@ async function sendEmailCampaign() {
         console.error(`Failed to send to ${customer.email}:`, error);
         failedCount++;
         
-        // Log failed attempt
+        // FIXED: Handle error properly - check if error.message exists
+        const errorMessage = error?.message || error?.toString() || "Unknown error occurred";
+        
+        // Log failed attempt with proper error handling
         await addDoc(emailLogsCol, {
           customerId: docu.id,
           customerEmail: customer.email,
@@ -1251,12 +1254,13 @@ async function sendEmailCampaign() {
           templateType: templateType,
           sentVia: "EmailJS (Brevo)",
           status: "failed",
-          error: error.message,
+          error: errorMessage, // Now this will never be undefined
           sentAt: new Date()
         });
       }
     }
-        // Update counters
+    
+    // Update counters
     const currentEmails = parseInt(document.getElementById("totalEmails").textContent || 0);
     document.getElementById("totalEmails").textContent = currentEmails + sentCount;
     
@@ -1276,7 +1280,8 @@ async function sendEmailCampaign() {
     
   } catch (error) {
     console.error("Error sending email campaign:", error);
-    showToast("Error sending email campaign: " + error.message, "error");
+    const errorMessage = error?.message || error?.toString() || "Unknown error occurred";
+    showToast("Error sending email campaign: " + errorMessage, "error");
   }
 }
 
@@ -1330,7 +1335,8 @@ async function sendTestEmail() {
     
   } catch (error) {
     console.error("Error sending test email:", error);
-    showToast("Error sending test email: " + error.message, "error");
+    const errorMessage = error?.message || error?.toString() || "Unknown error occurred";
+    showToast("Error sending test email: " + errorMessage, "error");
   }
 }
 
