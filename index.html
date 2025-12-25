@@ -953,11 +953,14 @@ const auth = getAuth(app);
 const customersCol = collection(db, "customers");
 const emailLogsCol = collection(db, "email_logs");
 
-// EmailJS Initialization with YOUR credentials
-emailjs.init("kpOeovejkjSL4ehak"); // Your public key
-const EMAILJS_SERVICE_ID = "service_3r4h28q"; // Replace with your actual EmailJS Service ID
-const EMAILJS_TEMPLATE_ID = "template_h06gsqj"; // Your template ID
+// ================== EMAILJS CONFIGURATION ==================
+// Initialize EmailJS with YOUR Public Key
+emailjs.init("kpOeovejkjSL4ehak");
 
+// GET THESE FROM EMAILJS DASHBOARD:
+const EMAILJS_SERVICE_ID = "service_smtp-relay.brevo.com"; // REPLACE WITH YOUR EMAILJS SERVICE ID
+const EMAILJS_TEMPLATE_ID = "template_h06gsqj"; // Your template ID
+  
 // Toast notification
 function showToast(message, type = "success") {
   const toast = document.getElementById("toast");
@@ -986,7 +989,6 @@ function showToast(message, type = "success") {
     toast.classList.remove("show");
   }, 3000);
 }
-
 // Tab navigation
 function showTab(event, tabID) {
   // Prevent default link behavior
@@ -1163,7 +1165,7 @@ async function deleteCustomer(id) {
   }
 }
 
-  // Send email campaign using EmailJS
+// Send email campaign using EmailJS + Brevo
 async function sendEmailCampaign() {
   const subject = document.getElementById("campaignSubject").value;
   const message = document.getElementById("campaignMessage").value;
@@ -1188,12 +1190,12 @@ async function sendEmailCampaign() {
     let sentCount = 0;
     let failedCount = 0;
     
-    // Send emails using EmailJS
+    // Send emails one by one
     for (const docu of snapshot.docs) {
       const customer = docu.data();
       
       try {
-        // Prepare email parameters for EmailJS
+        // Prepare email parameters
         const templateParams = {
           to_email: customer.email,
           to_name: customer.name,
@@ -1202,19 +1204,20 @@ async function sendEmailCampaign() {
           from_name: "Safar Travel Agency",
           reply_to: "noreply@safar-travel.com",
           customer_name: customer.name,
-          whatsapp_number: customer.whatsapp
+          customer_email: customer.email,
+          whatsapp: customer.whatsapp
         };
         
-        // Send email via EmailJS
+        // Send via EmailJS (which uses Brevo SMTP)
         const response = await emailjs.send(
           EMAILJS_SERVICE_ID, 
           EMAILJS_TEMPLATE_ID, 
           templateParams
         );
         
-        console.log(`Email sent to ${customer.email}:`, response);
+        console.log(`✅ Email sent to ${customer.email}`, response);
         
-        // Log the email in Firestore
+        // Log successful email
         await addDoc(emailLogsCol, {
           customerId: docu.id,
           customerEmail: customer.email,
@@ -1222,29 +1225,27 @@ async function sendEmailCampaign() {
           subject: subject,
           message: message,
           templateType: templateType,
-          sentVia: "EmailJS (Brevo)",
+          sentVia: "EmailJS + Brevo",
           status: "sent",
-          sentAt: new Date()
+          sentAt: new Date(),
+          messageId: response?.messageId || response?.text || ""
         });
         
         sentCount++;
         
-        // Update UI every 5 emails
+        // Update progress every 5 emails
         if (sentCount % 5 === 0) {
           showToast(`Sent ${sentCount} of ${snapshot.size} emails...`, "info");
         }
         
-        // Small delay to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 800));
         
       } catch (error) {
-        console.error(`Failed to send to ${customer.email}:`, error);
+        console.error(`❌ Failed to send to ${customer.email}:`, error);
         failedCount++;
         
-        // FIXED: Handle error properly - check if error.message exists
-        const errorMessage = error?.message || error?.toString() || "Unknown error occurred";
-        
-        // Log failed attempt with proper error handling
+        // Log failed email
         await addDoc(emailLogsCol, {
           customerId: docu.id,
           customerEmail: customer.email,
@@ -1252,15 +1253,15 @@ async function sendEmailCampaign() {
           subject: subject,
           message: message,
           templateType: templateType,
-          sentVia: "EmailJS (Brevo)",
+          sentVia: "EmailJS + Brevo",
           status: "failed",
-          error: errorMessage, // Now this will never be undefined
+          error: error?.message || error?.text || "Unknown error",
           sentAt: new Date()
         });
       }
     }
     
-    // Update counters
+    // Update email counter
     const currentEmails = parseInt(document.getElementById("totalEmails").textContent || 0);
     document.getElementById("totalEmails").textContent = currentEmails + sentCount;
     
@@ -1273,15 +1274,20 @@ async function sendEmailCampaign() {
       sentAt: new Date()
     });
     
-    showToast(`Campaign completed! Sent: ${sentCount}, Failed: ${failedCount}`, 
-              failedCount > 0 ? "warning" : "success");
+    // Show final result
+    if (sentCount === 0 && failedCount > 0) {
+      showToast(`All emails failed! Check your EmailJS configuration.`, "error");
+    } else if (failedCount > 0) {
+      showToast(`Campaign completed with ${sentCount} sent, ${failedCount} failed`, "warning");
+    } else {
+      showToast(`Success! Sent ${sentCount} emails to all customers.`, "success");
+    }
     
     updateAnalysis();
     
   } catch (error) {
-    console.error("Error sending email campaign:", error);
-    const errorMessage = error?.message || error?.toString() || "Unknown error occurred";
-    showToast("Error sending email campaign: " + errorMessage, "error");
+    console.error("Error in email campaign:", error);
+    showToast("Campaign error: " + (error?.message || "Unknown error"), "error");
   }
 }
 
